@@ -1,0 +1,71 @@
+---
+title: "W10 Task: The US Grocer (KR)"
+author: "Tyler Houssian"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:  
+    keep_md: true
+    toc: true
+    toc_float: true
+    code_folding: hide
+    fig_height: 6
+    fig_width: 12
+    fig_align: 'center'
+---
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r load_libraries, include=FALSE}
+# Use this R-Chunk to load all your libraries!
+#install.packages("tidyverse") # run this line once in console to get package
+library(tidyverse)
+library(dygraphs)
+library(tidyquant)
+```
+
+```{r load_data}
+# Use this R-Chunk to import all your datasets!
+
+```
+
+## Background
+
+Interactive visualizations can often be powerful for data investigations. They let your team get at questions in real-time. Use the Kroger (KR) stock price to build an interactive visualization of their performance over the last five years. Take some time to build a couple of different visualizations that show Krogers’ performance. See the task items below for a description.
+
+## Data Wrangling
+
+```{r tidy_data}
+# Use this R-Chunk to clean & wrangle your data!
+Ra <- c("KR") %>%
+    tq_get(get  = "stock.prices",
+           from = "2020-04-05",
+           to   = "2022-06-23")  %>%
+  group_by(symbol) %>%
+    tq_transmute(select     = adjusted, 
+                 mutate_fun = periodReturn, 
+                 period     = "monthly", 
+                 col_rename = "Ra")
+
+Ra$Ra[[1]] = (1 + Ra$Ra[[1]])* 10000
+
+for(i in 2:length(Ra$Ra)){
+  Ra$Ra[[i]] = (1 + Ra$Ra[[i]])* Ra$Ra[[(i-1)]]
+}
+
+newdata=xts(Ra$Ra, Ra$date)
+```
+
+## Data Visualization
+
+```{r plot_data}
+# Use this R-Chunk to plot & visualize your data!
+dygraph(newdata, main = "Kroger Stock: April 5th 2020 - June 23rd 2022") %>%
+  dyRebase(value = 10000) %>%
+  dyAnnotation("2021-08-31", text = "A", tooltip = "Shares of Kroger (KR 0.82%) dropped 12.1% in September due to a poorly received earnings report and difficult overall market conditions") %>%
+  dyAnnotation("2022-03-31", text = "B", tooltip = "Stock Markets all really took a bad turn here!")
+```
+
+## Conclusions
+From the looks of it Kroger overall did pretty solid! It dropped when all of the markets seemed to drop but it would have made you 5000 from only only investing 10,000 so that is a pretty solid gain. Looks like a good time to pull out of the market though would have been March 2022. It hit the peak but now the market is going down. I chose to add A and B to mark the turns to keep it simple. I also chose to add a title making it very clear what the date range was and what the stock was.
